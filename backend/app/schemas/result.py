@@ -1,4 +1,3 @@
-# backend/app/schemas/result.py
 
 from pydantic import BaseModel
 from typing import Dict

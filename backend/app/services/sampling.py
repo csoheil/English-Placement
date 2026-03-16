@@ -1,4 +1,3 @@
-# backend/app/services/sampling.py
 
 from sqlalchemy.orm import Session
 from app.models.question import Question
