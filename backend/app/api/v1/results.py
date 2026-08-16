@@ -1,18 +1,18 @@
-
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.exam import Exam
 from app.models.question import Question
+from app.models.result import Result
+from app.models.user import User
 from app.schemas.result import SubmitAnswersRequest, ResultResponse
-from app.core.security import get_current_user  # JWT dependency (placeholder)
+from app.services.scoring import calculate_score, map_score_to_cefr
 
 router = APIRouter(
     prefix="/results",
     tags=["Results"],
-    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -20,15 +20,24 @@ router = APIRouter(
 def submit_exam_answers(
     payload: SubmitAnswersRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    exam = db.query(Exam).filter(Exam.id == payload.exam_id).first()
+    """
+    Submit answers for an exam, score them and store the result.
+    """
+    # Load the exam and make sure it belongs to the current user
+    exam = (
+        db.query(Exam)
+        .filter(Exam.id == payload.exam_id, Exam.user_id == current_user.id)
+        .first()
+    )
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
 
     if exam.score is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Exam already submitted"
+            detail="Exam already submitted",
         )
 
     question_ids = list(payload.answers.keys())
@@ -44,32 +53,27 @@ def submit_exam_answers(
     if len(questions) != len(question_ids):
         raise HTTPException(
             status_code=400,
-            detail="Invalid question IDs detected"
+            detail="Invalid question IDs detected",
         )
 
-    score = 0
-    for q in questions:
-        submitted = payload.answers.get(q.id)
-        if submitted and submitted.upper() == q.correct_option.upper():
-            score += 1
-
+    # Score the answers
+    score = calculate_score(questions, payload.answers)
     total = len(questions)
+    cefr = map_score_to_cefr(score)
 
-    if score <= 4:
-        cefr = "A1"
-    elif score <= 7:
-        cefr = "A2"
-    elif score <= 10:
-        cefr = "B1"
-    elif score <= 14:
-        cefr = "B2"
-    elif score <= 17:
-        cefr = "C1"
-    else:
-        cefr = "C2"
-
+    # Update the exam record
     exam.score = score
     exam.cefr_level = cefr
+
+    # Also create a Result row (used by progress / history endpoints)
+    result = Result(
+        user_id=current_user.id,
+        exam_id=exam.id,
+        score=score,
+        total=total,
+        cefr_level=cefr,
+    )
+    db.add(result)
 
     db.commit()
     db.refresh(exam)
@@ -77,5 +81,5 @@ def submit_exam_answers(
     return ResultResponse(
         score=score,
         total=total,
-        cefr_level=cefr
+        cefr_level=cefr,
     )
