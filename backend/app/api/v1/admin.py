@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_admin
 from app.db.session import get_db
 from app.models.result import Result
+from app.models.user import User
 
 router = APIRouter(
     prefix="/admin",
@@ -15,11 +16,11 @@ router = APIRouter(
 @router.get("/cefr-distribution")
 def cefr_distribution(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user: User = Depends(get_current_admin),
 ):
     """
-    Return CEFR level distribution.
-    Admin-only logic can be added later.
+    Return CEFR level distribution across all submitted exams.
+    Admin-only endpoint.
     """
     rows = (
         db.query(Result.cefr_level, func.count(Result.id))
