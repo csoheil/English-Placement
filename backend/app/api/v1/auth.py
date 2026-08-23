@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -17,7 +18,7 @@ router = APIRouter(
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     """
-    Register a new user.
+    Register a new user with email and password.
     """
     existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
@@ -35,20 +36,32 @@ def register_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    return {"message": "User registered successfully"}
+    return {"message": "User registered successfully", "user_id": user.id}
 
 
 @router.post("/login", response_model=TokenResponse)
-def login_user(payload: UserCreate, db: Session = Depends(get_db)):
+def login_user(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
     """
-    Authenticate user and return JWT token.
+    Authenticate with email (username field) and password.
+    Returns a JWT access token. Compatible with OAuth2PasswordBearer.
     """
-    user = db.query(User).filter(User.email == payload.email).first()
-    if not user or not verify_password(payload.password, user.password_hash):
+    # OAuth2PasswordRequestForm uses "username" for the identifier
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
         )
 
     token = create_access_token(subject=str(user.id))
-    return {"access_token": token}
+    return TokenResponse(access_token=token)
