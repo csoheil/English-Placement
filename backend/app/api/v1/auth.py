@@ -7,7 +7,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate
 from app.schemas.token import TokenResponse
 from app.core.security import hash_password, verify_password
-from app.core.jwt import create_access_token
+from app.core.JWT import create_access_token
 
 router = APIRouter(
     prefix="/auth",
