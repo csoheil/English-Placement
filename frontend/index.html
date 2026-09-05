@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Placement Test</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="logo">English Placement</h1>
+      <nav class="nav" id="nav" hidden>
+        <button type="button" class="nav-btn" data-view="home">Home</button>
+        <button type="button" class="nav-btn" data-view="progress">Progress</button>
+        <button type="button" class="nav-btn" id="logout-btn">Logout</button>
+      </nav>
+    </header>
+
+    <main class="main">
+      
+      <section id="view-auth" class="view">
+        <div class="card auth-card">
+          <div class="tabs">
+            <button type="button" class="tab active" data-tab="login">Login</button>
+            <button type="button" class="tab" data-tab="register">Register</button>
+          </div>
+
+          <form id="login-form" class="form">
+            <label>
+              Email
+              <input type="email" name="email" required autocomplete="username" />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" required minlength="8" autocomplete="current-password" />
+            </label>
+            <button type="submit" class="btn primary">Login</button>
+          </form>
+
+          <form id="register-form" class="form" hidden>
+            <label>
+              Email
+              <input type="email" name="email" required autocomplete="username" />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" required minlength="8" autocomplete="new-password" />
+            </label>
+            <button type="submit" class="btn primary">Create account</button>
+          </form>
+
+          <p id="auth-message" class="message" hidden></p>
+        </div>
+      </section>
+
+      
+      <section id="view-home" class="view" hidden>
+        <div class="card">
+          <h2>Placement test</h2>
+          <p class="muted">
+            Answer the questions to estimate your CEFR level (A1–C2).
+          </p>
+          <button type="button" id="start-exam-btn" class="btn primary">Start exam</button>
+        </div>
+      </section>
+
+      <!-- Exam view -->
+      <section id="view-exam" class="view" hidden>
+        <div class="card exam-card">
+          <div class="exam-meta">
+            <span id="exam-progress">Question 1 / 20</span>
+          </div>
+          <h2 id="question-text" class="question-text"></h2>
+          <div id="options" class="options"></div>
+          <div class="exam-actions">
+            <button type="button" id="prev-btn" class="btn secondary" disabled>Previous</button>
+            <button type="button" id="next-btn" class="btn primary">Next</button>
+            <button type="button" id="submit-exam-btn" class="btn primary" hidden>Submit</button>
+          </div>
+        </div>
+      </section>
+
+      
+      <section id="view-result" class="view" hidden>
+        <div class="card result-card">
+          <h2>Your result</h2>
+          <p class="cefr" id="result-cefr">—</p>
+          <p class="score" id="result-score">—</p>
+          <button type="button" class="btn primary" data-view="home">Back to home</button>
+        </div>
+      </section>
+
+      
+      <section id="view-progress" class="view" hidden>
+        <div class="card">
+          <h2>Your progress</h2>
+          <div id="progress-list" class="list">
+            <p class="muted">No results yet.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="muted">English Placement Test</span>
+    </footer>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
