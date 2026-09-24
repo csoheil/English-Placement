@@ -181,6 +181,6 @@ backend/app/services/scoring.py
 
 ---
 
-## 📄 License
+##  License
 
 See `LICENSE` in the repository root.
